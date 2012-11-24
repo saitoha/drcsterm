@@ -62,7 +62,7 @@ along with this program. If not, see http://www.gnu.org/licenses/.
     import locale
     language, encoding = locale.getdefaultlocale()
     termenc = encoding
-    assert termenc.lower() == "utf-8"
+    assert termenc.lower() == "utf-8" or termenc.lower() == "utf8"
     lang = '%s.%s' % (language, "UTF-8") 
 
     # retrive starting command
