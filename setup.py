@@ -27,7 +27,7 @@ setup(name                  = 'drcsterm',
       install_requires      = ['tff >=0.0.9, <0.1.0'],
       entry_points          = """
                               [console_scripts]
-                              sskk = sskk:main
+                              drcsterm = drcsterm:main
                               """
       )
 
