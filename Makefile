@@ -1,24 +1,26 @@
 
-PACKAGE_NAME=drcsterm
+PACKAGE_NAME=tff
 PYTHON=python
 
-all:
-	
+all: test
+	$(PYTHON) setup.py sdist
+	python2.6 setup.py bdist_egg
+	python2.7 setup.py bdist_egg
 
 install:
-	#curl http://peak.telecommunity.com/dist/ez_setup.py | python
+	$(PYTHON) -c "import setuptools" || curl http://peak.telecommunity.com/dist/ez_setup.py | python
 	$(PYTHON) setup.py install
 
 uninstall:
-	rm -rf ~/.pythonz/pythons/CPython-2.7.3/lib/python2.7/site-packages/$(PACKAGE-NAME)
-	rm -f ~/.pythonz/pythons/CPython-2.7.3/bin/$(PACKAGE_NAME)
-	yes | pip uninstall tff $(PACKAGE_NAME) 
+	yes | pip uninstall $(PACKAGE_NAME) 
 	
 clean:
-	rm -rf dist/ build/ $(PACKAGE_NAME).egg-info
-	rm **/*.pyc
+	rm -rf dist/ build/ *.egg-info *.pyc **/*.pyc
 
-update:
+test:
+	$(PYTHON) setup.py test
+
+update: clean test
 	$(PYTHON) setup.py register
 	$(PYTHON) setup.py sdist upload
 	python2.6 setup.py bdist_egg upload

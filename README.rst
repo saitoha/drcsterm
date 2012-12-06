@@ -18,7 +18,7 @@ Mapping Rule
 
   DRCSTerm convert them into fllowing ISO-2022 Designatin Format:
 
-  ESC ( SP <\xXX> <\xYY> ESC ( B
+  ESC ( SP <\\xXX> <\\xYY> ESC ( B
 
 
 Install
@@ -26,7 +26,7 @@ Install
 
 via github ::
 
-    $ git clone https://github.com/saitoha/drcsterm.git
+    $ git clone --recursive https://github.com/saitoha/drcsterm.git
     $ cd drcsterm
     $ python setup.py install
 
