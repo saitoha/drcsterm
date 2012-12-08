@@ -24,7 +24,8 @@ setup(name                  = 'drcsterm',
       packages              = find_packages(exclude=[]),
       zip_safe              = True,
       include_package_data  = False,
-      install_requires      = ['tff >=0.0.9, <0.1.0'],
+#      install_requires      = ['tff >=0.0.9, <0.1.0'],
+      install_requires      = [],
       entry_points          = """
                               [console_scripts]
                               drcsterm = drcsterm:main
