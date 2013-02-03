@@ -18,8 +18,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ***** END LICENSE BLOCK *****
 
+
 def main():
-    import sys, os, optparse, select
+    import sys
+    import os
+    import optparse
 
     # parse options and arguments
     usage = 'usage: %prog [options] [command | - ]'
@@ -40,8 +43,8 @@ def main():
     if options.version:
         import __init__
         print '''
-drcsterm %s 
-Copyright (C) 2012 Hayaki Saito <user@zuse.jp>. 
+drcsterm %s
+Copyright (C) 2012 Hayaki Saito <user@zuse.jp>.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -63,7 +66,7 @@ along with this program. If not, see http://www.gnu.org/licenses/.
     language, encoding = locale.getdefaultlocale()
     termenc = encoding
     assert termenc.lower() == "utf-8" or termenc.lower() == "utf8"
-    lang = '%s.%s' % (language, "UTF-8") 
+    lang = '%s.%s' % (language, "UTF-8")
 
     # retrive starting command
     if len(args) > 0:
@@ -82,18 +85,18 @@ along with this program. If not, see http://www.gnu.org/licenses/.
         term = 'xterm'
 
     import tff
-    
-    ################################################################################
+
+    ###########################################################################
     #
     # Scanner implementation
     #
     class UnicodeDRCSScanner(tff.Scanner):
         ''' scan input stream and iterate characters '''
         __data = None
-    
+
         def assign(self, value, termenc):
             self.__data = value
-    
+
         def __iter__(self):
             for x in self.__data:
                 c = ord(x)
@@ -113,19 +116,19 @@ along with this program. If not, see http://www.gnu.org/licenses/.
                         else:
                             code = self.__utf8_state
                             if code >= 0x100000:
-                                yield 0x1b # ESC
-                                yield 0x28 # (
-                                yield 0x20 # SP
-                                yield (code >> 8) & 0xff # (
+                                yield 0x1b  # ESC
+                                yield 0x28  # (
+                                yield 0x20  # SP
+                                yield (code >> 8) & 0xff  # (
                                 yield code & 0xff
-                                yield 0x1b # ESC
-                                yield 0x28 # (
-                                yield 0x42 # B
+                                yield 0x1b  # ESC
+                                yield 0x28  # (
+                                yield 0x42  # B
                             else:
-                                yield code 
+                                yield code
                         self.__count = 0
                         self.__utf8_state = 0
-    
+
                 elif c >> 5 == 0x06:
                     # 110xxxxx 10xxxxxx
                     if self.__count != 0:
@@ -172,8 +175,6 @@ along with this program. If not, see http://www.gnu.org/licenses/.
     session = tff.Session(tty)
     session.start("UTF-8", outputscanner=UnicodeDRCSScanner())
 
-
 ''' main '''
-if __name__ == '__main__':    
+if __name__ == '__main__':
     main()
-
