@@ -93,87 +93,128 @@ along with this program. If not, see http://www.gnu.org/licenses/.
     class UnicodeDRCSScanner(tff.Scanner):
         ''' scan input stream and iterate characters '''
         __data = None
+        _enabled = False
 
         def assign(self, value, termenc):
             self.__data = value
 
+        def setenabled(self, value):
+            self._enabled = value
+
         def __iter__(self):
-            for x in self.__data:
-                c = ord(x)
-                if c < 0x80:
-                    # 0xxxxxxx
-                    self.__utf8_state = 0
-                    self.__count = 0
-                    yield c
-                elif c >> 6 == 0x02:
-                    # 10xxxxxx
-                    self.__utf8_state = self.__utf8_state << 6 | c & 0x3f
-                    self.__count -= 1
-                    if self.__count == 0:
-                        # TODO: convert all redundant utf-8 sequences into '?'
-                        if self.__utf8_state < 0x80:
+            if self._enabled:
+                for x in self.__data:
+                    c = ord(x)
+                    if c < 0x80:
+                        # 0xxxxxxx
+                        self.__utf8_state = 0
+                        self.__count = 0
+                        yield c
+                    elif c >> 6 == 0x02:
+                        # 10xxxxxx
+                        self.__utf8_state = self.__utf8_state << 6 | c & 0x3f
+                        self.__count -= 1
+                        if self.__count == 0:
+                            # TODO: convert all redundant utf-8
+                            #       sequences into '?'
+                            if self.__utf8_state < 0x80:
+                                yield 0x3f
+                            else:
+                                code = self.__utf8_state
+                                if code >= 0x100000:
+                                    yield 0x1b  # ESC
+                                    yield 0x28  # (
+                                    yield 0x20  # SP
+                                    yield (code >> 8) & 0xff  # (
+                                    yield code & 0xff
+                                    yield 0x1b  # ESC
+                                    yield 0x28  # (
+                                    yield 0x42  # B
+                                else:
+                                    yield code
+                            self.__count = 0
+                            self.__utf8_state = 0
+
+                    elif c >> 5 == 0x06:
+                        # 110xxxxx 10xxxxxx
+                        if self.__count != 0:
+                            self.__count = 0
                             yield 0x3f
                         else:
-                            code = self.__utf8_state
-                            if code >= 0x100000:
-                                yield 0x1b  # ESC
-                                yield 0x28  # (
-                                yield 0x20  # SP
-                                yield (code >> 8) & 0xff  # (
-                                yield code & 0xff
-                                yield 0x1b  # ESC
-                                yield 0x28  # (
-                                yield 0x42  # B
-                            else:
-                                yield code
-                        self.__count = 0
-                        self.__utf8_state = 0
+                            self.__utf8_state = c & 0x1f
+                            self.__count = 1
+                    elif c >> 4 == 0x0e:
+                        # 1110xxxx 10xxxxxx 10xxxxxx
+                        if self.__count != 0:
+                            self.__count = 0
+                            yield 0x3f
+                        else:
+                            self.__utf8_state = c & 0x0f
+                            self.__count = 2
+                    elif c >> 3 == 0x1e:
+                        # 11110xxx
+                        if self.__count != 0:
+                            self.__count = 0
+                            yield 0x3f
+                        else:
+                            self.__utf8_state = c & 0x07
+                            self.__count = 3
+                    elif c >> 2 == 0x3e:
+                        # 111110xx
+                        if self.__count != 0:
+                            self.__count = 0
+                            yield 0x3f
+                        else:
+                            self.__utf8_state = c & 0x03
+                            self.__count = 4
+                    elif c >> 1 == 0x7e:
+                        # 1111110x
+                        if self.__count != 0:
+                            self.__count = 0
+                            yield 0x3f
+                        else:
+                            self.__utf8_state = c & 0x01
+                            self.__count = 5
+            else:
+                for x in unicode(self.__data, 'utf-8'):
+                    yield ord(x)
 
-                elif c >> 5 == 0x06:
-                    # 110xxxxx 10xxxxxx
-                    if self.__count != 0:
-                        self.__count = 0
-                        yield 0x3f
-                    else:
-                        self.__utf8_state = c & 0x1f
-                        self.__count = 1
-                elif c >> 4 == 0x0e:
-                    # 1110xxxx 10xxxxxx 10xxxxxx
-                    if self.__count != 0:
-                        self.__count = 0
-                        yield 0x3f
-                    else:
-                        self.__utf8_state = c & 0x0f
-                        self.__count = 2
-                elif c >> 3 == 0x1e:
-                    # 11110xxx
-                    if self.__count != 0:
-                        self.__count = 0
-                        yield 0x3f
-                    else:
-                        self.__utf8_state = c & 0x07
-                        self.__count = 3
-                elif c >> 2 == 0x3e:
-                    # 111110xx
-                    if self.__count != 0:
-                        self.__count = 0
-                        yield 0x3f
-                    else:
-                        self.__utf8_state = c & 0x03
-                        self.__count = 4
-                elif c >> 1 == 0x7e:
-                    # 1111110x
-                    if self.__count != 0:
-                        self.__count = 0
-                        yield 0x3f
-                    else:
-                        self.__utf8_state = c & 0x01
-                        self.__count = 5
+    def parsedigits(parameter):
+        n = 0
+        for digit in parameter:
+            if digit < 0x30:
+                return False
+            if digit >= 0x40:
+                return False
+            n = n * 10 + digit
+        return n
+
+    class OutputHandler(tff.DefaultHandler):
+
+        _scanner = None
+
+        def __init__(self, scanner):
+            self._scanner = scanner
+
+        def handle_csi(self, context, parameter, intermediate, final):
+            if intermediate == [0x3f]:
+                if final == 0x68:  # h
+                    if parsedigits(parameter) == 8800:
+                        self._scanner.setenabled(True)
+                        return True
+                elif final == 0x6c:  # l
+                    if parsedigits(parameter) == 8800:
+                        self._scanner.setenabled(False)
+                        return True
+            return False
 
     tty = tff.DefaultPTY(term, lang, command, sys.stdin)
     tty.fitsize()
     session = tff.Session(tty)
-    session.start("UTF-8", outputscanner=UnicodeDRCSScanner())
+    scanner = UnicodeDRCSScanner()
+    session.start("UTF-8",
+                  outputscanner=scanner,
+                  outputhandler=OutputHandler(scanner))
 
 ''' main '''
 if __name__ == '__main__':
