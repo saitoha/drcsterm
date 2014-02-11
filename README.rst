@@ -6,7 +6,28 @@ What is This
 
   DRCSTerm aims at reviving the DRCS(Dynamically Redefined Character Set)
   feature to the Terminal World.
-  It provides UCS Private Area (Plain 16) -> DRCS conversion service on your terminal.
+  It provides the character mapping service which converts some UCS Private
+  Area (Plain 16) characters to ISO-2022 designation sequences on your terminal.
+  
+
+Enable/Disable Mapping
+----------------------
+
+DRCSTerm reserves private mode 8800-8805
+
+## Example for DRCSMMv1:
+
+### Enable mapping service version 1:
+
+```
+    CSI ? 8800 h
+```
+
+### Disable mapping service version 1:
+
+```
+    CSI ? 8800 l
+```
 
 Mapping Rule
 ------------
