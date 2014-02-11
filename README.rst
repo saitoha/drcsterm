@@ -13,7 +13,9 @@ What is This
 Enable/Disable Mapping
 ----------------------
 
-DRCSTerm reserves private mode 8800-8805
+DRCSTerm reserves private mode 8800-8804.
+
+Private mode 8800(DRCSMMv1) enables or disables the character mapping service.
 
 Example for DRCSMMv1:
 
@@ -25,8 +27,8 @@ Example for DRCSMMv1:
 
     CSI ? 8800 l
 
-Mapping Rule
-------------
+Mapping Rule Version 1
+----------------------
 
   DRCSTerm uses UCS 16 Plane (U+100000-U+10FFFF).
   If output character stream includes characters in this range, such as; ::
