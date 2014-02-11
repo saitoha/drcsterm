@@ -135,17 +135,25 @@ along with this program. If not, see http://www.gnu.org/licenses/.
                                 yield 0x3f
                             else:
                                 code = self.__utf8_state
-                                if code >= 0x100000:
-                                    yield 0x1b  # ESC
-                                    yield 0x28  # (
-                                    yield 0x20  # SP
-                                    yield (code >> 8) & 0xff  # (
-                                    yield code & 0xff
-                                    yield 0x1b  # ESC
-                                    yield 0x28  # (
-                                    yield 0x42  # B
-                                else:
+                                if code < 0x104000:
                                     yield code
+                                else:
+                                    xx = (code >> 8) & 0xff
+                                    if xx > 0x7e:
+                                        yield code
+                                    else:
+                                        yy = code & 0xff
+                                        if yy < 0x20 or yy > 0x7f:
+                                            yield code
+                                        else:
+                                            yield 0x1b  # ESC
+                                            yield 0x28  # (
+                                            yield 0x20  # SP
+                                            yield xx
+                                            yield yy
+                                            yield 0x1b  # ESC
+                                            yield 0x28  # (
+                                            yield 0x42  # B
                             self.__count = 0
                             self.__utf8_state = 0
 
