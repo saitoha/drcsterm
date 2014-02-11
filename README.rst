@@ -17,17 +17,13 @@ DRCSTerm reserves private mode 8800-8805
 
 Example for DRCSMMv1:
 
-- Enable mapping service version 1:
+- Enable mapping service version 1::
 
-```
     CSI ? 8800 h
-```
 
-- Disable mapping service version 1:
+- Disable mapping service version 1::
 
-```
     CSI ? 8800 l
-```
 
 Mapping Rule
 ------------
