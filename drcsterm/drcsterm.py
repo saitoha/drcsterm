@@ -202,14 +202,30 @@ along with this program. If not, see http://www.gnu.org/licenses/.
                     yield ord(x)
 
     def parsedigits(parameter):
-        n = 0
-        for digit in parameter:
-            if digit < 0x30:
-                return False
-            if digit >= 0x40:
-                return False
-            n = n * 10 + digit
-        return n
+        it = parameter.__iter__()
+        try:
+            n = 0
+            c = it.next()
+            while True:
+                if c <= 0x3b:
+                    break
+                if c >= 0x40:
+                    break
+                c = it.next()
+            while True:
+                if c >= 0x30 and c < 0x3a:
+                    n = n * 10 + c - 0x30
+                elif c == 0x3b:
+                    if n >= 0:
+                        yield n
+                    n = 0
+                else:
+                    n = -1
+                c = it.next()
+        except StopIteration:
+            if n >= 0:
+                yield n
+
 
     class OutputHandler(tff.DefaultHandler):
 
