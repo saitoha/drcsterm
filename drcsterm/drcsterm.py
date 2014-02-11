@@ -238,6 +238,7 @@ along with this program. If not, see http://www.gnu.org/licenses/.
             if not intermediate and parameter and parameter[0] == 0x3f:
                 if final == 0x68:  # h
                     handled = False
+                    params = []
                     for param in parsedigits(parameter):
                         if param == 8800:
                             self._scanner.setenabled(True)
@@ -245,10 +246,11 @@ along with this program. If not, see http://www.gnu.org/licenses/.
                         else:
                             params.append(param)
                     if handled:
-                        context.puts("\033[%sl" % ';'.join(params))
+                        context.puts("\033[?%sh" % ';'.join([str(p) for p in params]))
                         return True
                 elif final == 0x6c:  # l
                     handled = False
+                    params = []
                     for param in parsedigits(parameter):
                         if param == 8800:
                             handled = True
@@ -256,17 +258,32 @@ along with this program. If not, see http://www.gnu.org/licenses/.
                         else:
                             params.append(param)
                     if handled:
-                        context.puts("\033[%sl" % ';'.join(params))
+                        context.puts("\033[?%sl" % ';'.join([str(p) for p in params]))
                         return True
             return False
 
     tty = tff.DefaultPTY(term, lang, command, sys.stdin)
-    tty.fitsize()
-    session = tff.Session(tty)
-    scanner = UnicodeDRCSScanner()
-    session.start("UTF-8",
-                  outputscanner=scanner,
-                  outputhandler=OutputHandler(scanner))
+    try:
+        tty.fitsize()
+        session = tff.Session(tty)
+        scanner = UnicodeDRCSScanner()
+        session.start("UTF-8",
+                      outputscanner=scanner,
+                      outputhandler=OutputHandler(scanner))
+    except IOError, e:
+        logging.exception(e)
+        logging.exception("Connection closed.")
+        print("Connection closed.")
+    except Exception, e:
+        logging.exception(e)
+        logging.exception("Aborted by exception.")
+        print('drcsterm aborted by an uncaught exception.'
+              ' see $HOME/.drcsterm/log/log.txt.')
+    finally:
+        try:
+            tty.restore_term()
+        except Exception, e:
+            logging.exception(e)
 
 ''' main '''
 if __name__ == '__main__':
