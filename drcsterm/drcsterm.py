@@ -23,6 +23,7 @@ def main():
     import sys
     import os
     import optparse
+    import logging
 
     # parse options and arguments
     usage = 'usage: %prog [options] [command | - ]'
@@ -83,6 +84,14 @@ along with this program. If not, see http://www.gnu.org/licenses/.
         term = os.getenv('TERM')
     else:
         term = 'xterm'
+
+    rcdir = os.path.join(os.getenv("HOME"), ".drcsterm")
+    logdir = os.path.join(rcdir, "log")
+    if not os.path.exists(logdir):
+        os.makedirs(logdir)
+
+    logfile = os.path.join(logdir, "log.txt")
+    logging.basicConfig(filename=logfile, filemode="w")
 
     import tff
 
