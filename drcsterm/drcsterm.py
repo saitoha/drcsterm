@@ -235,14 +235,28 @@ along with this program. If not, see http://www.gnu.org/licenses/.
             self._scanner = scanner
 
         def handle_csi(self, context, parameter, intermediate, final):
-            if intermediate == [0x3f]:
+            if not intermediate and parameter and parameter[0] == 0x3f:
                 if final == 0x68:  # h
-                    if parsedigits(parameter) == 8800:
-                        self._scanner.setenabled(True)
+                    handled = False
+                    for param in parsedigits(parameter):
+                        if param == 8800:
+                            self._scanner.setenabled(True)
+                            handled = True
+                        else:
+                            params.append(param)
+                    if handled:
+                        context.puts("\033[%sl" % ';'.join(params))
                         return True
                 elif final == 0x6c:  # l
-                    if parsedigits(parameter) == 8800:
-                        self._scanner.setenabled(False)
+                    handled = False
+                    for param in parsedigits(parameter):
+                        if param == 8800:
+                            handled = True
+                            self._scanner.setenabled(False)
+                        else:
+                            params.append(param)
+                    if handled:
+                        context.puts("\033[%sl" % ';'.join(params))
                         return True
             return False
 
